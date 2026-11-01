@@ -1,0 +1,99 @@
+{
+  "name": "SHA Interiors - 4. Lead Status Update & Lifecycle Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sha-status-update",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook: Status Changed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.new_status.toLowerCase() }}",
+              "operation": "equal",
+              "value2": "converted"
+            }
+          ]
+        }
+      },
+      "name": "Is Converted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [440, 240]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "deal_won_alert",
+              "value": "=🎉 DEAL WON! {{ $json.body.customer_name }} has officially Converted for project {{ $json.body.lead_id }}. Cancelling outreach cadences and notifying design onboarding team."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Format Won Deal Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [680, 180]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "={{ $env.TEAM_ANNOUNCEMENTS_WEBHOOK || 'https://hooks.slack.com/services/DEMO/WON' }}",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\n  \"text\": \"{{ $json.deal_won_alert }}\"\n}"
+      },
+      "name": "Broadcast Won Deal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [920, 180]
+    }
+  ],
+  "connections": {
+    "Webhook: Status Changed": {
+      "main": [
+        [
+          {
+            "node": "Is Converted?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Converted?": {
+      "main": [
+        [
+          {
+            "node": "Format Won Deal Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Won Deal Alert": {
+      "main": [
+        [
+          {
+            "node": "Broadcast Won Deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

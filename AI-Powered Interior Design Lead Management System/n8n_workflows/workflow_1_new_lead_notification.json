@@ -1,0 +1,106 @@
+{
+  "name": "SHA Interiors - 1. New Lead Ingestion & Notification",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sha-new-lead",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook: New Lead Received",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.customer_name }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.body.phone }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "name": "Validate Lead Payload",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "notification_title",
+              "value": "=New Interior Design Enquiry: {{ $json.body.customer_name }} ({{ $json.body.project_type }} in {{ $json.body.city }})"
+            },
+            {
+              "name": "notification_body",
+              "value": "=Budget: {{ $json.body.budget_range }} | Scope: {{ $json.body.scope_of_work }} | Timeline: {{ $json.body.project_timeline }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Format Sales Notification",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [720, 240]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "={{ $env.SALES_TEAM_WEBHOOK_URL || 'https://hooks.slack.com/services/DEMO/REPLACE' }}",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\n  \"text\": \"🏡 *{{ $json.notification_title }}*\\n{{ $json.notification_body }}\"\n}"
+      },
+      "name": "Dispatch Sales Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [950, 240]
+    }
+  ],
+  "connections": {
+    "Webhook: New Lead Received": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead Payload": {
+      "main": [
+        [
+          {
+            "node": "Format Sales Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Sales Notification": {
+      "main": [
+        [
+          {
+            "node": "Dispatch Sales Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

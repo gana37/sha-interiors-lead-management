@@ -1,0 +1,552 @@
+{
+  "total_rows": 9240,
+  "total_cols": 37,
+  "duplicate_rows": 0,
+  "duplicate_prospect_ids": 0,
+  "duplicate_lead_numbers": 0,
+  "overall_conversion_rate": 38.54,
+  "columns_summary": [
+    {
+      "column": "Prospect ID",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 9240,
+      "sample_values": [
+        "7927b2df-8bba-4d29-b9a2-b6e0beafe620",
+        "2a272436-5132-4136-86fa-dcc88c88f482",
+        "8cc8c611-a219-4f35-ad23-fdfd2656bd8a",
+        "0cc2df48-7cf4-4e39-9de9-19797f9b38cc",
+        "3256f628-e534-4826-9d63-4a8b88782852"
+      ]
+    },
+    {
+      "column": "Lead Number",
+      "dtype": "int64",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 9240,
+      "sample_values": [
+        "660737",
+        "660728",
+        "660727",
+        "660719",
+        "660681"
+      ]
+    },
+    {
+      "column": "Lead Origin",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 5,
+      "sample_values": [
+        "API",
+        "Landing Page Submission",
+        "Lead Add Form",
+        "Lead Import",
+        "Quick Add Form"
+      ]
+    },
+    {
+      "column": "Lead Source",
+      "dtype": "str",
+      "null_count": 36,
+      "null_percent": 0.39,
+      "select_count": 0,
+      "effective_missing_pct": 0.39,
+      "unique_values_count": 21,
+      "sample_values": [
+        "Olark Chat",
+        "Organic Search",
+        "Direct Traffic",
+        "Google",
+        "Referral Sites"
+      ]
+    },
+    {
+      "column": "Do Not Email",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 2,
+      "sample_values": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "column": "Do Not Call",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 2,
+      "sample_values": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "column": "Converted",
+      "dtype": "int64",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 2,
+      "sample_values": [
+        "0",
+        "1"
+      ]
+    },
+    {
+      "column": "TotalVisits",
+      "dtype": "float64",
+      "null_count": 137,
+      "null_percent": 1.48,
+      "select_count": 0,
+      "effective_missing_pct": 1.48,
+      "unique_values_count": 41,
+      "sample_values": [
+        "0.0",
+        "5.0",
+        "2.0",
+        "1.0",
+        "4.0"
+      ]
+    },
+    {
+      "column": "Total Time Spent on Website",
+      "dtype": "int64",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 1731,
+      "sample_values": [
+        "0",
+        "674",
+        "1532",
+        "305",
+        "1428"
+      ]
+    },
+    {
+      "column": "Page Views Per Visit",
+      "dtype": "float64",
+      "null_count": 137,
+      "null_percent": 1.48,
+      "select_count": 0,
+      "effective_missing_pct": 1.48,
+      "unique_values_count": 114,
+      "sample_values": [
+        "0.0",
+        "2.5",
+        "2.0",
+        "1.0",
+        "4.0"
+      ]
+    },
+    {
+      "column": "Last Activity",
+      "dtype": "str",
+      "null_count": 103,
+      "null_percent": 1.11,
+      "select_count": 0,
+      "effective_missing_pct": 1.11,
+      "unique_values_count": 17,
+      "sample_values": [
+        "Page Visited on Website",
+        "Email Opened",
+        "Unreachable",
+        "Converted to Lead",
+        "Olark Chat Conversation"
+      ]
+    },
+    {
+      "column": "Country",
+      "dtype": "str",
+      "null_count": 2461,
+      "null_percent": 26.63,
+      "select_count": 0,
+      "effective_missing_pct": 26.63,
+      "unique_values_count": 38,
+      "sample_values": [
+        "India",
+        "Russia",
+        "Kuwait",
+        "Oman",
+        "United Arab Emirates"
+      ]
+    },
+    {
+      "column": "Specialization",
+      "dtype": "str",
+      "null_count": 1438,
+      "null_percent": 15.56,
+      "select_count": 0,
+      "effective_missing_pct": 15.56,
+      "unique_values_count": 19,
+      "sample_values": [
+        "Select",
+        "Business Administration",
+        "Media and Advertising",
+        "Supply Chain Management",
+        "IT Projects Management"
+      ]
+    },
+    {
+      "column": "How did you hear about X Education",
+      "dtype": "str",
+      "null_count": 2207,
+      "null_percent": 23.89,
+      "select_count": 0,
+      "effective_missing_pct": 23.89,
+      "unique_values_count": 10,
+      "sample_values": [
+        "Select",
+        "Word Of Mouth",
+        "Other",
+        "Online Search",
+        "Multiple Sources"
+      ]
+    },
+    {
+      "column": "What is your current occupation",
+      "dtype": "str",
+      "null_count": 2690,
+      "null_percent": 29.11,
+      "select_count": 0,
+      "effective_missing_pct": 29.11,
+      "unique_values_count": 6,
+      "sample_values": [
+        "Unemployed",
+        "Student",
+        "Working Professional",
+        "Businessman",
+        "Other"
+      ]
+    },
+    {
+      "column": "What matters most to you in choosing a course",
+      "dtype": "str",
+      "null_count": 2709,
+      "null_percent": 29.32,
+      "select_count": 0,
+      "effective_missing_pct": 29.32,
+      "unique_values_count": 3,
+      "sample_values": [
+        "Better Career Prospects",
+        "Flexibility & Convenience",
+        "Other"
+      ]
+    },
+    {
+      "column": "Search",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 2,
+      "sample_values": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "column": "Magazine",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 1,
+      "sample_values": [
+        "No"
+      ]
+    },
+    {
+      "column": "Newspaper Article",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 2,
+      "sample_values": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "column": "X Education Forums",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 2,
+      "sample_values": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "column": "Newspaper",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 2,
+      "sample_values": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "column": "Digital Advertisement",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 2,
+      "sample_values": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "column": "Through Recommendations",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 2,
+      "sample_values": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "column": "Receive More Updates About Our Courses",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 1,
+      "sample_values": [
+        "No"
+      ]
+    },
+    {
+      "column": "Tags",
+      "dtype": "str",
+      "null_count": 3353,
+      "null_percent": 36.29,
+      "select_count": 0,
+      "effective_missing_pct": 36.29,
+      "unique_values_count": 26,
+      "sample_values": [
+        "Interested in other courses",
+        "Ringing",
+        "Will revert after reading the email",
+        "Lost to EINS",
+        "In confusion whether part time or DLP"
+      ]
+    },
+    {
+      "column": "Lead Quality",
+      "dtype": "str",
+      "null_count": 4767,
+      "null_percent": 51.59,
+      "select_count": 0,
+      "effective_missing_pct": 51.59,
+      "unique_values_count": 5,
+      "sample_values": [
+        "Low in Relevance",
+        "Might be",
+        "Not Sure",
+        "Worst",
+        "High in Relevance"
+      ]
+    },
+    {
+      "column": "Update me on Supply Chain Content",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 1,
+      "sample_values": [
+        "No"
+      ]
+    },
+    {
+      "column": "Get updates on DM Content",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 1,
+      "sample_values": [
+        "No"
+      ]
+    },
+    {
+      "column": "Lead Profile",
+      "dtype": "str",
+      "null_count": 2709,
+      "null_percent": 29.32,
+      "select_count": 0,
+      "effective_missing_pct": 29.32,
+      "unique_values_count": 6,
+      "sample_values": [
+        "Select",
+        "Potential Lead",
+        "Other Leads",
+        "Lateral Student",
+        "Dual Specialization Student"
+      ]
+    },
+    {
+      "column": "City",
+      "dtype": "str",
+      "null_count": 1420,
+      "null_percent": 15.37,
+      "select_count": 0,
+      "effective_missing_pct": 15.37,
+      "unique_values_count": 7,
+      "sample_values": [
+        "Select",
+        "Mumbai",
+        "Thane & Outskirts",
+        "Other Metro Cities",
+        "Other Cities"
+      ]
+    },
+    {
+      "column": "Asymmetrique Activity Index",
+      "dtype": "str",
+      "null_count": 4218,
+      "null_percent": 45.65,
+      "select_count": 0,
+      "effective_missing_pct": 45.65,
+      "unique_values_count": 3,
+      "sample_values": [
+        "02.Medium",
+        "01.High",
+        "03.Low"
+      ]
+    },
+    {
+      "column": "Asymmetrique Profile Index",
+      "dtype": "str",
+      "null_count": 4218,
+      "null_percent": 45.65,
+      "select_count": 0,
+      "effective_missing_pct": 45.65,
+      "unique_values_count": 3,
+      "sample_values": [
+        "02.Medium",
+        "01.High",
+        "03.Low"
+      ]
+    },
+    {
+      "column": "Asymmetrique Activity Score",
+      "dtype": "float64",
+      "null_count": 4218,
+      "null_percent": 45.65,
+      "select_count": 0,
+      "effective_missing_pct": 45.65,
+      "unique_values_count": 12,
+      "sample_values": [
+        "15.0",
+        "14.0",
+        "13.0",
+        "17.0",
+        "16.0"
+      ]
+    },
+    {
+      "column": "Asymmetrique Profile Score",
+      "dtype": "float64",
+      "null_count": 4218,
+      "null_percent": 45.65,
+      "select_count": 0,
+      "effective_missing_pct": 45.65,
+      "unique_values_count": 10,
+      "sample_values": [
+        "15.0",
+        "20.0",
+        "17.0",
+        "18.0",
+        "14.0"
+      ]
+    },
+    {
+      "column": "I agree to pay the amount through cheque",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 1,
+      "sample_values": [
+        "No"
+      ]
+    },
+    {
+      "column": "A free copy of Mastering The Interview",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 2,
+      "sample_values": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "column": "Last Notable Activity",
+      "dtype": "str",
+      "null_count": 0,
+      "null_percent": 0.0,
+      "select_count": 0,
+      "effective_missing_pct": 0.0,
+      "unique_values_count": 16,
+      "sample_values": [
+        "Modified",
+        "Email Opened",
+        "Page Visited on Website",
+        "Email Bounced",
+        "Email Link Clicked"
+      ]
+    }
+  ],
+  "select_values_count": {
+    "Specialization": 1942,
+    "How did you hear about X Education": 5043,
+    "Lead Profile": 4146,
+    "City": 2249
+  }
+}

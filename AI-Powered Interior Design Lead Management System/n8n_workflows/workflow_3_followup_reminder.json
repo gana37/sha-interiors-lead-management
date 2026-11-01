@@ -1,0 +1,134 @@
+{
+  "name": "SHA Interiors - 3. Automated Follow-up Reminder & Stop Condition Guard",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sha-followup-trigger",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook: Due Follow-up Event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.body.is_opted_out }}",
+              "value2": true
+            },
+            {
+              "value1": "={{ ['converted', 'lost'].includes($json.body.lead_status.toLowerCase()) }}",
+              "value2": true
+            },
+            {
+              "value1": "={{ !!$json.body.last_customer_response }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Check Stop Conditions",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "cancel_reason",
+              "value": "=Stop condition triggered: Status='{{ $json.body.lead_status }}', OptOut={{ $json.body.is_opted_out }}, Responded={{ !!$json.body.last_customer_response }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Halt Follow-up Execution",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [700, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "dispatch_status",
+              "value": "Approved for Automated Follow-up Dispatch"
+            },
+            {
+              "name": "prepared_message",
+              "value": "={{ $json.body.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Format Outbound Notification",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [700, 400]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "={{ $env.OUTBOUND_DISPATCH_URL || 'https://api.example.com/crm/dispatch' }}",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\n  \"schedule_id\": \"{{ $json.body.schedule_id }}\",\n  \"customer_name\": \"{{ $json.body.customer_name }}\",\n  \"channel\": \"{{ $json.body.channel }}\",\n  \"message\": \"{{ $json.prepared_message }}\"\n}"
+      },
+      "name": "Deliver Follow-up to Dispatcher",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [950, 400]
+    }
+  ],
+  "connections": {
+    "Webhook: Due Follow-up Event": {
+      "main": [
+        [
+          {
+            "node": "Check Stop Conditions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Stop Conditions": {
+      "main": [
+        [
+          {
+            "node": "Halt Follow-up Execution",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Outbound Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Outbound Notification": {
+      "main": [
+        [
+          {
+            "node": "Deliver Follow-up to Dispatcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

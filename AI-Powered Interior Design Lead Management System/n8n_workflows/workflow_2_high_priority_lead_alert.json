@@ -1,0 +1,99 @@
+{
+  "name": "SHA Interiors - 2. High Priority Lead Instant Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sha-high-priority-alert",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook: High Priority Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.body.lead_score }}",
+              "operation": "largerEqual",
+              "value2": 80
+            }
+          ]
+        }
+      },
+      "name": "Filter: Score >= 80",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "priority_alert_message",
+              "value": "=🔥 HIGH PRIORITY LEAD ALERT: {{ $json.body.customer_name }} scored {{ $json.body.lead_score }}/100! Budget: {{ $json.body.budget_range }}, City: {{ $json.body.city }}. Immediate consultation scheduling required."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Prepare Priority Alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [720, 240]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "={{ $env.MANAGEMENT_ALERT_WEBHOOK_URL || 'https://hooks.slack.com/services/DEMO/PRIORITY' }}",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\n  \"channel\": \"#high-priority-leads\",\n  \"text\": \"{{ $json.priority_alert_message }}\"\n}"
+      },
+      "name": "Send Priority Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [950, 240]
+    }
+  ],
+  "connections": {
+    "Webhook: High Priority Lead": {
+      "main": [
+        [
+          {
+            "node": "Filter: Score >= 80",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: Score >= 80": {
+      "main": [
+        [
+          {
+            "node": "Prepare Priority Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Priority Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Priority Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
