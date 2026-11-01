@@ -14,6 +14,8 @@ step3_test.db
 test_scoring.db
 test_followups.db
 test_e2e.db
+fresh_deploy_*.db
+fresh_deploy_test.db
 temp_*.db
 
 # Virtual environments
