@@ -61,6 +61,19 @@ st.markdown("""
 # Initialize database schema
 database.init_db()
 
+# Auto-seed database if empty (ensures seamless startup on fresh cloud deployments like Streamlit Community Cloud)
+try:
+    _init_stats = database.get_lead_stats()
+    if _init_stats.get('total_leads', 0) == 0:
+        _base_dir = os.path.dirname(os.path.abspath(__file__))
+        _synthetic_csv = os.path.join(_base_dir, "data", "synthetic", "interior_design_leads.csv")
+        if os.path.exists(_synthetic_csv):
+            data_loader.import_csv_to_db(_synthetic_csv, data_origin="synthetic_import")
+            lead_scoring.score_all_leads()
+            followups.schedule_followups_for_all_eligible_leads()
+except Exception as _seed_err:
+    pass
+
 # Navigation Sidebar
 with st.sidebar:
     st.markdown("## 🏡 SHA Interiors")

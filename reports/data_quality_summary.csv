@@ -1,0 +1,38 @@
+Column_Name,Raw_Dtype,Raw_Null_Count,Form_Select_Count,Effective_Missing_Pct,Status_in_Cleaned,Engineering_Reason
+Prospect ID,str,0,0,0.0,Retained & Standardized,"Retained: Core identifier, target, or engagement metric"
+Lead Number,int64,0,0,0.0,Retained & Standardized,"Retained: Core identifier, target, or engagement metric"
+Lead Origin,str,0,0,0.0,Retained & Standardized,"Retained: Core identifier, target, or engagement metric"
+Lead Source,str,36,0,0.39,Retained & Standardized,Retained: Standardized missing/Select to explicit categories
+Do Not Email,str,0,0,0.0,Retained & Standardized,"Retained: Core identifier, target, or engagement metric"
+Do Not Call,str,0,0,0.0,Removed,Near-zero variance (>99.8% constant 'No')
+Converted,int64,0,0,0.0,Retained & Standardized,"Retained: Core identifier, target, or engagement metric"
+TotalVisits,float64,137,0,1.48,Retained & Standardized,Retained: Median imputed for numerical stability
+Total Time Spent on Website,int64,0,0,0.0,Retained & Standardized,"Retained: Core identifier, target, or engagement metric"
+Page Views Per Visit,float64,137,0,1.48,Retained & Standardized,Retained: Median imputed for numerical stability
+Last Activity,str,103,0,1.11,Retained & Standardized,Retained: Standardized missing/Select to explicit categories
+Country,str,2461,0,26.63,Retained & Standardized,Retained: Standardized missing/Select to explicit categories
+Specialization,str,1438,1942,36.58,Retained & Standardized,Retained: Standardized missing/Select to explicit categories
+How did you hear about X Education,str,2207,5043,78.46,Removed,Extreme missingness (>70% null/Select)
+What is your current occupation,str,2690,0,29.11,Retained & Standardized,Retained: Standardized missing/Select to explicit categories
+What matters most to you in choosing a course,str,2709,0,29.32,Retained & Standardized,Retained: Standardized missing/Select to explicit categories
+Search,str,0,0,0.0,Removed,Near-zero variance (>99.8% constant 'No')
+Magazine,str,0,0,0.0,Removed,Zero variance (100% constant 'No')
+Newspaper Article,str,0,0,0.0,Removed,Near-zero variance (>99.8% constant 'No')
+X Education Forums,str,0,0,0.0,Removed,Near-zero variance (>99.8% constant 'No')
+Newspaper,str,0,0,0.0,Removed,Near-zero variance (>99.8% constant 'No')
+Digital Advertisement,str,0,0,0.0,Removed,Near-zero variance (>99.8% constant 'No')
+Through Recommendations,str,0,0,0.0,Removed,Near-zero variance (>99.8% constant 'No')
+Receive More Updates About Our Courses,str,0,0,0.0,Removed,Zero variance (100% constant 'No')
+Tags,str,3353,0,36.29,Retained & Standardized,Retained with caveat: Potential post-conversion data leakage
+Lead Quality,str,4767,0,51.59,Retained & Standardized,Retained with caveat: Potential post-conversion data leakage
+Update me on Supply Chain Content,str,0,0,0.0,Removed,Zero variance (100% constant 'No')
+Get updates on DM Content,str,0,0,0.0,Removed,Zero variance (100% constant 'No')
+Lead Profile,str,2709,4146,74.19,Removed,Extreme missingness (>70% null/Select)
+City,str,1420,2249,39.71,Retained & Standardized,Retained: Standardized missing/Select to explicit categories
+Asymmetrique Activity Index,str,4218,0,45.65,Retained & Standardized,Retained with caveat: Potential post-conversion data leakage
+Asymmetrique Profile Index,str,4218,0,45.65,Retained & Standardized,Retained with caveat: Potential post-conversion data leakage
+Asymmetrique Activity Score,float64,4218,0,45.65,Retained & Standardized,Retained with caveat: Potential post-conversion data leakage
+Asymmetrique Profile Score,float64,4218,0,45.65,Retained & Standardized,Retained with caveat: Potential post-conversion data leakage
+I agree to pay the amount through cheque,str,0,0,0.0,Removed,Zero variance (100% constant 'No')
+A free copy of Mastering The Interview,str,0,0,0.0,Retained & Standardized,"Retained: Core identifier, target, or engagement metric"
+Last Notable Activity,str,0,0,0.0,Retained & Standardized,"Retained: Core identifier, target, or engagement metric"
