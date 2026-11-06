@@ -8,21 +8,41 @@ __pycache__/
 .env.*
 !.env.example
 
-# Test SQLite databases
-test_*.db
-step3_test.db
-test_scoring.db
-test_followups.db
-test_e2e.db
-fresh_deploy_*.db
-fresh_deploy_test.db
-temp_*.db
+# SQLite Databases & Backups (Excluded from Git; preserved locally)
+*.db
+*.sqlite
+*.sqlite3
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+data/backup/
+
+# Customer Lead CSV & Excel Datasets (Private customer data)
+SHA_*.csv
+SHA_*.xlsx
+*_Leads.csv
+*_Leads.xlsx
+*.xlsx
+*.xls
+data/processed/
+data/synthetic/
+
+# Local Archives & Bundles
+*.zip
+*.tar.gz
+*.rar
+*.7z
 
 # Virtual environments
 venv/
 .venv/
 env/
 ENV/
+
+# Scratch & Temporary Testing Folders
+scratch/
+temp/
+tmp/
 
 # IDE / Editor folders
 .vscode/
@@ -35,6 +55,10 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 .DS_Store
+
+# Backups
+backups/
+*.bak
 
 # Agent logs / internal files
 .system_generated/

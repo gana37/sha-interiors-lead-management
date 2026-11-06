@@ -1,7 +1,9 @@
 import json
+import re
 import datetime
 from typing import Dict, List, Tuple, Any, Optional
 import database
+import hyderabad_geo as hg
 
 # ==============================================================================
 # CONFIGURABLE SCORING SETTINGS & DEMO DEFAULTS
@@ -13,8 +15,15 @@ import database
 DEFAULT_BUDGET_WEIGHTS = {
     "Above ₹25 lakh": 30,       # Luxury / Large turnkey villa / Premium project
     "₹10 lakh–₹25 lakh": 25,    # Core high-margin target for 3BHK/Villa turnkey
+    "₹10 lakh - ₹25 lakh": 25,
+    "₹12 lakh – ₹18 lakh": 25,  # Target high-intent turnkey 3BHK budget
+    "₹12 lakh - ₹18 lakh": 25,
     "₹5 lakh–₹10 lakh": 18,     # Standard 2BHK/3BHK standard package (Studio Sweet Spot)
+    "₹5 lakh - ₹10 lakh": 18,
+    "₹5 lakh – ₹8 lakh": 18,    # Standard 2BHK modular kitchen & woodwork
+    "₹5 lakh - ₹8 lakh": 18,
     "₹3 lakh–₹5 lakh": 10,      # Essential modular woodwork / compact setup
+    "₹3 lakh - ₹5 lakh": 10,
     "Below ₹3 lakh": 2          # Constrained budget; below typical turnkey minimum
 }
 
@@ -22,23 +31,43 @@ DEFAULT_BUDGET_WEIGHTS = {
 # Demo Default: "₹5 lakh–₹10 lakh" (Needs confirmation with SHA Interiors management)
 CONFIGURABLE_MIN_TARGET_BUDGET = "₹5 lakh–₹10 lakh"
 
-# 2. Location Suitability Weights (Max 20 Points)
-# Tiered serviceability configuration:
+# 2. Location Suitability Weights (Max 20 Points) - Hyderabad Metropolitan Tiers
 DEFAULT_LOCATION_TIERS = {
-    "Tier 1 - Primary Service Hubs": {
-        "cities": ["Bangalore", "Hyderabad"],
+    "Tier 1 - Prime IT & Luxury Corridor": {
+        "localities": [
+            "Jubilee Hills", "Banjara Hills", "Gachibowli", "Madhapur",
+            "Financial District", "Kokapet", "HITEC City", "Kondapur", "Nanakramguda"
+        ],
         "points": 20,
-        "description": "Full design studio & in-house execution teams"
+        "description": "Full design studio & dedicated site engineering (20 pts)"
     },
-    "Tier 2 - Secondary Service Hubs": {
-        "cities": ["Chennai", "Mumbai", "Pune"],
+    "Tier 2 - Established Residential & Growth Corridor": {
+        "localities": [
+            "Narsingi", "Tellapur", "Manikonda", "Nallagandla", "Kukatpally",
+            "Miyapur", "Bachupally", "Nizampet", "Kompally", "Begumpet",
+            "Somajiguda", "Secunderabad", "Sainikpuri", "Himayatnagar", "Serilingampally"
+        ],
+        "points": 17,
+        "description": "Active consultation & verified partner execution (17 pts)"
+    },
+    "Tier 3 - Core Urban & Established Communities": {
+        "localities": [
+            "Ameerpet", "Punjagutta", "Suchitra", "Bowenpally", "Chandanagar",
+            "Hafeezpet", "Alwal", "Uppal", "Nagole", "Habsiguda", "Tarnaka",
+            "Attapur", "Mehdipatnam", "ECIL", "AS Rao Nagar", "Trimulgherry", "Moula Ali"
+        ],
         "points": 14,
-        "description": "Active design consultation & verified partner execution"
+        "description": "Standard urban service corridor (14 pts)"
     },
-    "Tier 3 - Expansion / Partner Hubs": {
-        "cities": ["Delhi NCR"],
-        "points": 8,
-        "description": "Remote architectural consultation / partner network"
+    "Tier 4 - Greater Metropolitan Corridor": {
+        "localities": [
+            "LB Nagar", "Kothapet", "Saroornagar", "Saidabad", "Jeedimetla",
+            "Quthbullapur", "Nacharam", "Ghatkesar", "Boduppal", "Peerzadiguda",
+            "Pocharam", "Rajendra Nagar", "Shamshabad", "Bandlaguda", "Chandrayangutta",
+            "Falaknuma", "Malkajgiri", "Kapra", "Yapral", "Khairatabad", "Lakdikapul", "Abids"
+        ],
+        "points": 12,
+        "description": "Extended metropolitan coverage (12 pts)"
     }
 }
 
@@ -61,10 +90,10 @@ DEFAULT_READINESS_WEIGHTS = {
 }
 
 # Valid project option lists to avoid awarding points to placeholders
-VALID_PROJECT_TYPES = {"1BHK", "2BHK", "3BHK", "Villa", "Modular Kitchen", "Commercial/Office"}
+VALID_PROJECT_TYPES = {"1BHK", "2BHK", "3BHK", "4BHK", "Villa", "Modular Kitchen", "Commercial/Office"}
 VALID_PROPERTY_STATUSES = {"Ready to Move", "Possession within 30 days", "Possession within 1–3 months", "Under Construction"}
-VALID_TIMELINES = {"Immediately", "Within 1 month", "Within 3 months", "Within 6 months", "Just Exploring"}
-VALID_SCOPES = {"Full Turnkey Interior", "Modular Kitchen", "Wardrobe", "Renovation", "Furniture and Woodwork", "Commercial Interiors"}
+VALID_TIMELINES = {"Immediately", "Within 1 month", "Within 2 months", "Within 3 months", "Within 3–4 months", "Within 3-4 months", "Within 6 months", "Just Exploring"}
+VALID_SCOPES = {"Full Turnkey Interior", "Complete Home Interior Design", "Modular Kitchen", "Kitchen and Bedroom Interiors", "Wardrobe", "Renovation", "Furniture and Woodwork", "Commercial Interiors"}
 
 # ==============================================================================
 # CORE SCORING LOGIC
@@ -75,22 +104,81 @@ def calculate_budget_score(budget_range: Optional[str]) -> Tuple[int, str]:
     if not budget_range:
         return 0, "No budget range specified"
     cleaned = budget_range.strip()
-    score = DEFAULT_BUDGET_WEIGHTS.get(cleaned, 0)
-    detail = f"{cleaned} ({score}/30 pts)"
-    return score, detail
-
-def calculate_location_score(city: Optional[str]) -> Tuple[int, str]:
-    """Calculates location score (0 to 20) based on serviceable city tiers."""
-    if not city:
-        return 0, "No city provided (0/20 pts)"
-    cleaned = city.strip()
-    
-    for tier_name, tier_info in DEFAULT_LOCATION_TIERS.items():
-        if any(cleaned.lower() == c.lower() for c in tier_info["cities"]):
-            pts = tier_info["points"]
-            return pts, f"{cleaned} [{tier_name}] ({pts}/20 pts)"
+    if cleaned in DEFAULT_BUDGET_WEIGHTS:
+        score = DEFAULT_BUDGET_WEIGHTS[cleaned]
+        return score, f"{cleaned} ({score}/30 pts)"
+        
+    norm = cleaned.replace("–", "-").replace("—", "-")
+    for k, v in DEFAULT_BUDGET_WEIGHTS.items():
+        if k.replace("–", "-").replace("—", "-").lower() == norm.lower():
+            return v, f"{cleaned} ({v}/30 pts)"
             
-    return 0, f"{cleaned} [Out of Service Area] (0/20 pts)"
+    lower = cleaned.lower()
+    if "lakh" in lower or "l" in lower:
+        nums = [float(n) for n in re.findall(r"\d+(?:\.\d+)?", lower)]
+        if nums:
+            max_val = max(nums)
+            min_val = min(nums)
+            if max_val > 25 or min_val >= 25:
+                score = 30
+            elif max_val >= 10:
+                score = 25
+            elif max_val >= 5:
+                score = 18
+            elif max_val >= 3:
+                score = 10
+            else:
+                score = 2
+            return score, f"{cleaned} ({score}/30 pts)"
+            
+    return 0, f"{cleaned} (0/30 pts)"
+
+def calculate_location_score(city: Optional[str] = None, locality: Optional[str] = None) -> Tuple[int, str]:
+    """
+    Calculates location score (0 to 20) based on validated Hyderabad locality tiers.
+    Awards:
+      - Tier 1: 20 pts (Prime IT & Luxury Corridors)
+      - Tier 2: 17 pts (Established Residential Corridors)
+      - Tier 3: 14 pts (Core Urban Communities)
+      - Tier 4: 12 pts (Greater Metropolitan Corridors)
+      - 0 pts: Non-Hyderabad cities (Bangalore, Chennai, Mumbai, Pune, Delhi NCR, etc.) and unverified localities.
+    """
+    # If single argument provided as locality or city
+    if not locality and city and hg.is_known_locality(city):
+        locality = city
+        city = "Hyderabad"
+
+    # If city is specified and is outside Hyderabad service area, award 0 points immediately
+    if city and not hg.is_hyderabad_service_area(city):
+        cleaned_city = city.strip()
+        return 0, f"{cleaned_city} [Out of Service Area] (0/20 pts)"
+
+    # If locality is provided and is a validated Hyderabad locality
+    if locality and hg.is_known_locality(locality):
+        clean_loc = locality.strip()
+        pts = hg.get_locality_score(clean_loc)
+        meta = hg.get_locality_metadata(clean_loc)
+        reg = meta.get("region", "Hyderabad")
+        tier = meta.get("tier", 4)
+        if pts == 20:
+            return 20, f"{clean_loc} [Tier 1 - {reg} - Prime IT & Luxury Corridor] (20/20 pts)"
+        elif pts == 17:
+            return 17, f"{clean_loc} [Tier 2 - {reg} - Established Residential Hub] (17/20 pts)"
+        elif pts == 14:
+            return 14, f"{clean_loc} [Tier 3 - {reg} - Core Urban Community] (14/20 pts)"
+        else:
+            return 12, f"{clean_loc} [Tier 4 - {reg} - Greater Metropolitan Corridor] (12/20 pts)"
+
+    # If locality is provided but unverified / unknown
+    if locality and locality.strip():
+        clean_loc = locality.strip()
+        return 0, f"{clean_loc} [Unverified Locality - Out of Service Area] (0/20 pts)"
+
+    # If only city='Hyderabad' with no locality provided (backward compatibility for city-level qualification)
+    if city and hg.is_hyderabad_service_area(city):
+        return 20, f"{city} [Primary Service Hub] (20/20 pts)"
+
+    return 0, "No location provided (0/20 pts)"
 
 def calculate_requirements_score(lead: Dict[str, Any]) -> Tuple[int, Dict[str, int], str]:
     """
@@ -212,14 +300,18 @@ def generate_scoring_reason(
         reasons.append(f"low budget tier ({budget})")
         
     # Location driver
+    locality = lead.get("locality")
+    loc_str = locality if locality else lead.get("city", "Unknown")
     if location_score == 20:
-        reasons.append(f"located in primary service hub ({city})")
-    elif location_score >= 14:
-        reasons.append(f"located in secondary service hub ({city})")
-    elif location_score > 0:
-        reasons.append(f"located in expansion hub ({city})")
+        reasons.append(f"located in Tier 1 prime corridor ({loc_str})")
+    elif location_score == 17:
+        reasons.append(f"located in Tier 2 established residential hub ({loc_str})")
+    elif location_score == 14:
+        reasons.append(f"located in Tier 3 urban community ({loc_str})")
+    elif location_score == 12:
+        reasons.append(f"located in Tier 4 metropolitan corridor ({loc_str})")
     else:
-        reasons.append(f"located outside standard service hubs ({city})")
+        reasons.append(f"located outside Hyderabad service area ({loc_str})")
         
     # Requirements driver
     if requirements_score >= 18:
@@ -242,7 +334,7 @@ def score_lead(lead: Dict[str, Any]) -> Dict[str, Any]:
     - scored_at (ISO timestamp)
     """
     b_score, b_detail = calculate_budget_score(lead.get("budget_range"))
-    l_score, l_detail = calculate_location_score(lead.get("city"))
+    l_score, l_detail = calculate_location_score(lead.get("city"), locality=lead.get("locality"))
     r_score, r_subdict, r_detail = calculate_requirements_score(lead)
     p_score, p_detail = calculate_readiness_score(lead.get("purchase_readiness"))
     

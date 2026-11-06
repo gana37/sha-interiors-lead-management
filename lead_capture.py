@@ -5,6 +5,7 @@ from typing import Dict, Tuple, Optional, List, Any
 import streamlit as st
 import database
 import lead_scoring
+import hyderabad_geo as hg
 
 def is_valid_indian_phone(phone_str: str) -> bool:
     """
@@ -31,7 +32,7 @@ def is_valid_indian_phone(phone_str: str) -> bool:
 # Standard RFC 5322 compliant email pattern
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
-CITY_OPTIONS = ["Bangalore", "Hyderabad", "Chennai", "Mumbai", "Pune", "Delhi NCR", "Other"]
+CITY_OPTIONS = ["Hyderabad", "Secunderabad", "Greater Hyderabad", "Cyberabad", "Other"]
 LEAD_SOURCE_OPTIONS = [
     "Website Inquiry", "Instagram Ad", "Google Search", "Architect Referral",
     "Past Client Referral", "Walk-in Studio", "Facebook Campaign", "Housing Portal", "Direct Walk-in"
@@ -39,7 +40,7 @@ LEAD_SOURCE_OPTIONS = [
 BUDGET_OPTIONS = [
     "Below ₹3 lakh", "₹3 lakh–₹5 lakh", "₹5 lakh–₹10 lakh", "₹10 lakh–₹25 lakh", "Above ₹25 lakh"
 ]
-PROJECT_TYPE_OPTIONS = ["1BHK", "2BHK", "3BHK", "Villa", "Modular Kitchen", "Commercial/Office"]
+PROJECT_TYPE_OPTIONS = ["1BHK", "2BHK", "3BHK", "4BHK", "Villa", "Modular Kitchen", "Commercial/Office"]
 PROPERTY_STATUS_OPTIONS = [
     "Ready to Move", "Possession within 30 days", "Possession within 1–3 months", "Under Construction"
 ]
@@ -65,7 +66,9 @@ def validate_lead_inputs(
     property_status: str,
     project_timeline: str,
     scope_of_work: str,
-    purchase_readiness: str
+    purchase_readiness: str,
+    locality: Optional[str] = None,
+    pincode: Optional[str] = None
 ) -> Tuple[bool, List[str]]:
     """Validates manual form inputs. Returns (is_valid, list_of_error_messages)."""
     errors = []
@@ -143,12 +146,23 @@ def create_manual_lead(
     # Pre-calculate lead score
     scoring_res = lead_scoring.score_lead(lead_data)
     
+    loc = (lead_data.get("locality") or "").strip() or None
+    reg = (lead_data.get("region") or "").strip() or (hg.get_region_for_locality(loc) if loc else None)
+    pin = (lead_data.get("pincode") or "").strip() or (hg.get_pincode_for_locality(loc) if loc else None)
+    c_city = lead_data["city"].strip()
+    is_serv = 1 if hg.is_hyderabad_service_area(c_city) else 0
+
     lead_record = {
         "lead_id": lead_id,
         "customer_name": lead_data["customer_name"].strip(),
         "phone": lead_data["phone"].strip(),
         "email": (lead_data.get("email") or "").strip() or None,
-        "city": lead_data["city"].strip(),
+        "state": (lead_data.get("state") or "Telangana").strip(),
+        "city": c_city,
+        "locality": loc,
+        "region": reg,
+        "pincode": pin,
+        "is_service_area": is_serv,
         "lead_source": lead_data.get("lead_source", "Website Inquiry").strip(),
         "budget_range": lead_data["budget_range"].strip(),
         "project_type": lead_data["project_type"].strip(),
@@ -182,9 +196,9 @@ def create_manual_lead(
         return False, err_msg, None
 
 def render_lead_capture_form(db_path: str = database.DEFAULT_DB_PATH):
-    """Renders the Streamlit form for Add New Customer Enquiry."""
-    st.subheader("Add New Customer Enquiry")
-    st.caption("Capture and qualify incoming customer enquiries directly for SHA Interface Interiors.")
+    """Renders the Streamlit form for Add New Customer Enquiry (Hyderabad Edition)."""
+    st.subheader("Add New Customer Enquiry – Hyderabad Metropolitan Area")
+    st.caption("Capture, locate, and qualify incoming customer enquiries across Hyderabad, Secunderabad, and surrounding regions.")
 
     with st.form("manual_lead_form", clear_on_submit=False):
         col1, col2 = st.columns(2)
@@ -194,7 +208,33 @@ def render_lead_capture_form(db_path: str = database.DEFAULT_DB_PATH):
             cust_name = st.text_input("Customer Name *", placeholder="e.g. Aditi Hegde")
             phone = st.text_input("Phone Number *", placeholder="e.g. +91 98765 43210")
             email = st.text_input("Email Address (Optional)", placeholder="e.g. aditi.hegde@example.com")
-            city = st.selectbox("City *", options=CITY_OPTIONS, index=0)
+            
+            c_sub1, c_sub2 = st.columns(2)
+            with c_sub1:
+                city = st.selectbox("City *", options=CITY_OPTIONS, index=0)
+            with c_sub2:
+                state_val = st.text_input("State", value="Telangana", disabled=True)
+                
+            all_locs = hg.get_all_localities()
+            loc_options = ["-- Select Locality --"] + all_locs + ["+ Add Custom Locality..."]
+            sel_loc = st.selectbox("Hyderabad Locality / Sector *", options=loc_options, index=1)
+            
+            custom_loc_input = ""
+            custom_region_input = ""
+            if sel_loc == "+ Add Custom Locality...":
+                custom_loc_input = st.text_input("Enter New Locality Name *", placeholder="e.g. Puppalaguda")
+                custom_region_input = st.selectbox("Assign Region *", options=hg.HYDERABAD_REGIONS, index=0)
+                final_locality = custom_loc_input.strip()
+                if final_locality:
+                    hg.register_custom_locality(final_locality, custom_region_input)
+            elif sel_loc != "-- Select Locality --":
+                final_locality = sel_loc
+            else:
+                final_locality = ""
+                
+            pincode_auto = hg.get_pincode_for_locality(final_locality) if final_locality else ""
+            pincode_val = st.text_input("Postal PIN Code (Optional)", value=pincode_auto, placeholder="e.g. 500032")
+            
             lead_source = st.selectbox("Lead Source *", options=LEAD_SOURCE_OPTIONS, index=0)
             preferred_contact = st.selectbox("Preferred Contact Method *", options=CONTACT_METHOD_OPTIONS, index=0)
             
@@ -231,7 +271,11 @@ def render_lead_capture_form(db_path: str = database.DEFAULT_DB_PATH):
                 "customer_name": cust_name,
                 "phone": phone,
                 "email": email,
+                "state": "Telangana",
                 "city": city,
+                "locality": final_locality,
+                "region": hg.get_region_for_locality(final_locality) if final_locality else "Unspecified Hyderabad",
+                "pincode": pincode_val,
                 "lead_source": lead_source,
                 "budget_range": budget_range,
                 "project_type": project_type,

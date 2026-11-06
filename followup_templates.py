@@ -1,4 +1,5 @@
 from typing import Dict, Any
+import business_config
 
 def get_template_catalog() -> Dict[str, str]:
     """Returns the catalog of available follow-up message templates."""
@@ -9,7 +10,7 @@ def get_template_catalog() -> Dict[str, str]:
         "site_visit_invitation": "4. Complimentary Site Visit Invitation",
         "portfolio_sharing": "5. Curated Design Portfolio & Moodboard",
         "no_response": "6. Polite Follow-up (No Response)",
-        "consultation_scheduling": "7. Design Studio Consultation Scheduling"
+        "consultation_scheduling": f"7. {business_config.OFFICE_NAME.title()} Consultation Scheduling"
     }
 
 def generate_personalized_message(
@@ -76,15 +77,18 @@ def generate_personalized_message(
         
     elif template_type == "consultation_scheduling":
         return (
-            f"Dear {name}, we would be delighted to host you at the SHA Interface Interiors Experience Center in {city}. "
-            f"You can explore live material finishes (acrylic, veneers, quartz countertops) and discuss your {p_type} "
-            f"vision with our principal designer. Can we reserve a slot for you this upcoming weekend?"
+            f"Dear {name}, we would be delighted to arrange a meeting at our {business_config.OFFICE_NAME} or schedule a convenient phone call "
+            f"to discuss your {p_type} vision in {city}. Our general office hours are {business_config.OFFICE_HOURS_START} to {business_config.OFFICE_HOURS_END} {business_config.TIMEZONE}, Monday through Sunday, "
+            f"with customer consultation appointments available between {business_config.APPOINTMENT_HOURS_START} and {business_config.APPOINTMENT_HOURS_END} {business_config.TIMEZONE}.\n\n"
+            f"You can view our location on Google Maps here: {business_config.OFFICE_MAPS_LINK} .\n\n"
+            f"Please let us know your preferred date and time between {business_config.APPOINTMENT_HOURS_START} and {business_config.APPOINTMENT_HOURS_END}, and our team will assist you with confirming the appointment."
         )
         
     else:
         # Default warm inquiry follow-up
         return (
-            f"Hello {name}, thank you for your interest in SHA Interface Interiors. "
-            f"We would love to understand your {p_type} requirements and discuss suitable interior options "
-            f"within your {budget} budget in {city}."
+            f"Hello {name}, thank you for your interest in {business_config.BUSINESS_NAME}. "
+            f"We would love to arrange a meeting at our {business_config.OFFICE_NAME} or schedule a phone call to understand your {p_type} requirements "
+            f"and discuss suitable interior options within your {budget} budget in {city}. "
+            f"Customer consultation appointments at our {business_config.OFFICE_NAME} are available between {business_config.APPOINTMENT_HOURS_START} and {business_config.APPOINTMENT_HOURS_END} {business_config.TIMEZONE}, Monday through Sunday."
         )

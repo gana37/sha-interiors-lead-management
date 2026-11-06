@@ -27,7 +27,7 @@ def cleanup():
 
 def run_tests():
     print("==================================================")
-    print("STARTING STEP 4: LEAD SCORING TEST SUITE")
+    print("STARTING STEP 4: LEAD SCORING TEST SUITE (HYDERABAD)")
     print("==================================================")
     cleanup()
     
@@ -38,7 +38,8 @@ def run_tests():
     perfect_lead = {
         "lead_id": "TEST-MAX",
         "customer_name": "Perfect Prospect",
-        "city": "Bangalore",  # 20 pts
+        "city": "Hyderabad",
+        "locality": "Gachibowli",  # 20 pts (Tier 1)
         "budget_range": "Above ₹25 lakh",  # 30 pts
         "project_type": "Villa",  # 4 pts
         "property_status": "Ready to Move",  # 4 pts
@@ -60,6 +61,7 @@ def run_tests():
         "lead_id": "TEST-MIN",
         "customer_name": "Incomplete Prospect",
         "city": "Unknown / Far City",  # 0 pts
+        "locality": None,
         "budget_range": None,  # 0 pts
         "project_type": "",  # 0 pts
         "property_status": "",  # 0 pts
@@ -91,23 +93,29 @@ def run_tests():
     print("-> Test 3 PASSED: All budget tiers scored accurately.")
 
     # ----------------------------------------------------
-    # TEST 4: Location Scoring (0 to 20)
+    # TEST 4: Location Scoring across Hyderabad Tiers & Non-Hyderabad Cities
     # ----------------------------------------------------
-    print("\n[Test 4] Testing Location Scoring across tiers...")
+    print("\n[Test 4] Testing Location Scoring across Hyderabad Tiers & Non-Hyderabad Cities...")
     loc_tests = [
-        ("Bangalore", 20),
-        ("Hyderabad", 20),
-        ("Chennai", 14),
-        ("Mumbai", 14),
-        ("Pune", 14),
-        ("Delhi NCR", 8),
-        ("Kolkata", 0),
-        ("RandomTown", 0)
+        ("Hyderabad", "Gachibowli", 20),      # Tier 1
+        ("Hyderabad", "Jubilee Hills", 20),   # Tier 1
+        ("Hyderabad", "Kukatpally", 17),      # Tier 2
+        ("Hyderabad", "Tellapur", 17),        # Tier 2
+        ("Hyderabad", "Uppal", 14),           # Tier 3
+        ("Hyderabad", "Ameerpet", 14),        # Tier 3
+        ("Hyderabad", "LB Nagar", 12),        # Tier 4
+        ("Hyderabad", "Shamshabad", 12),      # Tier 4
+        ("Bangalore", None, 0),               # Out of service area
+        ("Mumbai", None, 0),                  # Out of service area
+        ("Pune", None, 0),                    # Out of service area
+        ("Delhi NCR", None, 0),               # Out of service area
+        ("Chennai", None, 0),                 # Out of service area
+        ("Hyderabad", "UnknownLocality", 0)   # Unverified locality
     ]
-    for city, expected_pts in loc_tests:
-        pts, detail = lead_scoring.calculate_location_score(city)
-        assert pts == expected_pts, f"City {city}: expected {expected_pts}, got {pts}"
-    print("-> Test 4 PASSED: Tier 1, Tier 2, Tier 3, and Out-of-service locations verified.")
+    for city, locality, expected_pts in loc_tests:
+        pts, detail = lead_scoring.calculate_location_score(city, locality=locality)
+        assert pts == expected_pts, f"Location {city}, {locality}: expected {expected_pts}, got {pts} ({detail})"
+    print("-> Test 4 PASSED: Tier 1 (20), Tier 2 (17), Tier 3 (14), Tier 4 (12), Non-Hyderabad (0), and Unknown (0) verified.")
 
     # ----------------------------------------------------
     # TEST 5: Requirements Completeness Scoring (0 to 20)
@@ -171,6 +179,7 @@ def run_tests():
         "lead_id": "TEST-NULL",
         "customer_name": "Null Fields",
         "city": None,
+        "locality": None,
         "budget_range": None,
         "project_type": None,
         "property_status": None,
@@ -192,7 +201,8 @@ def run_tests():
     sample_lead = {
         "lead_id": "TEST-BREAKDOWN",
         "customer_name": "Breakdown Test",
-        "city": "Chennai",                      # 14 pts
+        "city": "Hyderabad",
+        "locality": "Uppal",                    # 14 pts (Tier 3)
         "budget_range": "₹10 lakh–₹25 lakh",     # 25 pts
         "project_type": "3BHK",                 # 4 pts
         "property_status": "Ready to Move",     # 4 pts
@@ -219,7 +229,10 @@ def run_tests():
         "lead_id": "SHA-UPDATE-01",
         "customer_name": "Arun Kumar",
         "phone": "+91 98450 11111",
-        "city": "Bangalore",
+        "city": "Hyderabad",
+        "locality": "Gachibowli",
+        "region": "West Hyderabad",
+        "pincode": "500032",
         "lead_source": "Website Inquiry",
         "budget_range": "Below ₹3 lakh",
         "project_type": "1BHK",
@@ -270,6 +283,9 @@ def run_tests():
         "customer_name": "Status Check",
         "phone": "+91 98450 22222",
         "city": "Hyderabad",
+        "locality": "Jubilee Hills",
+        "region": "Central Hyderabad",
+        "pincode": "500033",
         "lead_source": "Architect Referral",
         "budget_range": "₹10 lakh–₹25 lakh",
         "project_type": "3BHK",
@@ -293,11 +309,13 @@ def run_tests():
     # TEST 12: Synthetic Historical Status Does Not Influence Score
     # ----------------------------------------------------
     print("\n[Test 12] Testing Independence from Historical Lead_Status...")
-    # Two identical leads: one with historical status 'Lost', one with 'Converted'
     base_lead = {
         "customer_name": "Identical Lead",
         "phone": "+91 98450 33333",
-        "city": "Pune",
+        "city": "Hyderabad",
+        "locality": "Kukatpally",
+        "region": "North Hyderabad",
+        "pincode": "500072",
         "lead_source": "Instagram Ad",
         "budget_range": "₹5 lakh–₹10 lakh",
         "project_type": "2BHK",

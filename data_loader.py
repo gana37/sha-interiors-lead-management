@@ -4,6 +4,7 @@ import re
 import datetime
 from typing import Dict, List, Tuple, Any, Optional
 import database
+import estimate_parser
 
 # Mandatory fields required for an Interior Design lead
 REQUIRED_COLUMNS = [
@@ -24,7 +25,7 @@ VALID_BUDGETS = {
 }
 
 VALID_PROJECT_TYPES = {
-    "1BHK", "2BHK", "3BHK", "Villa", "Modular Kitchen", "Commercial/Office"
+    "1BHK", "2BHK", "3BHK", "4BHK", "Villa", "Modular Kitchen", "Commercial/Office"
 }
 
 VALID_PROPERTY_STATUSES = {
@@ -62,16 +63,28 @@ def validate_and_prepare_csv(
     """
     try:
         if isinstance(file_or_path, str):
-            df = pd.read_csv(file_or_path)
+            if file_or_path.lower().endswith((".xlsx", ".xls")):
+                df = pd.read_excel(file_or_path)
+            else:
+                df = pd.read_csv(file_or_path)
         else:
-            df = pd.read_csv(file_or_path)
+            filename = getattr(file_or_path, "name", "").lower()
+            if filename.endswith((".xlsx", ".xls")):
+                df = pd.read_excel(file_or_path)
+            else:
+                try:
+                    df = pd.read_csv(file_or_path)
+                except Exception:
+                    file_or_path.seek(0)
+                    df = pd.read_excel(file_or_path)
     except Exception as e:
         return {
             "success": False,
-            "error_message": f"Unable to read CSV file: {str(e)}",
+            "error_message": f"Unable to read file (CSV/Excel): {str(e)}",
             "total_rows": 0,
             "valid_records": [],
-            "skipped_records": []
+            "skipped_records": [],
+            "validation_warnings": []
         }
 
     # Guard against importing legacy education dataset into CRM
@@ -93,7 +106,8 @@ def validate_and_prepare_csv(
     for col in df.columns:
         norm = col.strip().lower()
         for req in REQUIRED_COLUMNS:
-            if norm == req.lower():
+            norm_under = norm.replace(" ", "_")
+            if norm == req.lower() or norm_under == req.lower() or (req == "Project_Timeline" and norm in ("timeline", "project timeline")):
                 col_mapping[req] = col
                 break
                 
@@ -113,6 +127,18 @@ def validate_and_prepare_csv(
     seen_csv_lead_ids = set()
     valid_records = []
     skipped_records = []
+    validation_warnings = []
+    decoded_refs_count = 0
+    missing_refs_count = 0
+    invalid_refs_count = 0
+
+    # Locate optional Lead_Reference column (case-insensitive)
+    ref_col = None
+    for c in df.columns:
+        norm_c = c.strip().lower()
+        if norm_c in ("lead_reference", "estimate_reference", "reference_id", "lead_ref", "reference"):
+            ref_col = c
+            break
     
     now_str = datetime.datetime.now().isoformat()
     auto_id_counter = 1
@@ -189,6 +215,31 @@ def validate_and_prepare_csv(
             if created_date.lower() in ["nan", "none", ""]:
                 created_date = now_str
                 
+            # Lead Reference & Estimate Datetime extraction
+            lead_ref = None
+            est_generated_at = None
+            if ref_col and pd.notnull(row.get(ref_col)):
+                raw_ref = str(row.get(ref_col, "")).strip()
+                if raw_ref and raw_ref.lower() not in ("nan", "none", "null", "—", "-"):
+                    lead_ref = raw_ref
+                    dt_obj, iso_str, warning_msg = estimate_parser.parse_estimate_reference(lead_ref)
+                    if iso_str:
+                        est_generated_at = iso_str
+                        decoded_refs_count += 1
+                    else:
+                        invalid_refs_count += 1
+                        validation_warnings.append({
+                            "row_number": row_num,
+                            "lead_id": lead_id,
+                            "customer_name": cust_name,
+                            "lead_reference": lead_ref,
+                            "warning": warning_msg
+                        })
+                else:
+                    missing_refs_count += 1
+            else:
+                missing_refs_count += 1
+
             record = {
                 "lead_id": lead_id,
                 "customer_name": cust_name,
@@ -207,7 +258,9 @@ def validate_and_prepare_csv(
                 "lead_status": lead_status,
                 "created_at": created_date,
                 "updated_at": now_str,
-                "data_origin": data_origin
+                "data_origin": data_origin,
+                "lead_reference": lead_ref,
+                "estimate_generated_at": est_generated_at
             }
             valid_records.append(record)
 
@@ -218,7 +271,11 @@ def validate_and_prepare_csv(
         "valid_count": len(valid_records),
         "skipped_count": len(skipped_records),
         "valid_records": valid_records,
-        "skipped_records": skipped_records
+        "skipped_records": skipped_records,
+        "validation_warnings": validation_warnings,
+        "decoded_refs_count": decoded_refs_count,
+        "missing_refs_count": missing_refs_count,
+        "invalid_refs_count": invalid_refs_count
     }
 
 def import_csv_to_db(
@@ -265,3 +322,12 @@ def import_csv_to_db(
             "skipped_count": validation_res["total_rows"],
             "skipped_records": []
         }
+
+
+def import_excel_to_db(
+    file_or_path: Any,
+    db_path: str = database.DEFAULT_DB_PATH,
+    data_origin: str = "excel_import"
+) -> Dict[str, Any]:
+    """Convenience wrapper to import an Excel workbook into the leads database."""
+    return import_csv_to_db(file_or_path, db_path=db_path, data_origin=data_origin)
